@@ -33,26 +33,25 @@ void logger();
 //void log0();
 void log_acc();
 void log_logger();
-int Tilt[103] = {0};
-float t[3]; // = {1.0, 2.1, 3.0};
+float Tilt[103] = {0.0};
+float t[3]; 
 float AccData[103][3];
 
-//Thread thr;
 EventQueue accqueue;
 EventQueue logqueue;
-//EventQueue queue;
 
 int main(){
-   Thread accthr(osPriorityNormal);
+   pc.baud(115200);
+
+   Thread accthr(osPriorityHigh);
    Thread logthr(osPriorityLow);
    accthr.start(callback(&accqueue, &EventQueue::dispatch_forever));
    logthr.start(callback(&logqueue, &EventQueue::dispatch_forever));
    Ticker log_accTicker;
    log_accTicker.attach(accqueue.event(&log_acc), 0.1f);
-   //queue.event(log_acc);
 
    sw2.fall(&log_logger);
-   while(1);
+   while(1){wait(1);};
 }
 
 void log_logger(){
@@ -62,23 +61,22 @@ void log_logger(){
 void logger(){
 
    for (int i = 0; i < 100; i++){
-      LED = !LED;
+      LED = !LED;   // When transfering data, the LED blinks.
       for (int j = 0; j < 3; j++){
          AccData[i][j] = t[j];
          pc.printf("%1.4f\r\n", AccData[i][j]);
       }
       if (AccData[i][2]*AccData[i][2] < (AccData[i][0]*AccData[i][0] + AccData[i][1]*AccData[i][1] + AccData[i][2]*AccData[i][2])/2){
-         Tilt[i] = 1;
-         pc.printf("%f\r\n", Tilt[i]);
+         Tilt[i] = 1.0;
       }
-      wait(0.1);
+      pc.printf("%1.4f\r\n", Tilt[i]);
+      wait_us(100000);
     }
 
 }
 
 void log_acc() {
    //LED = !LED;
-   pc.baud(115200);
 
    uint8_t who_am_i, data[2], res[6];
    int16_t acc16;
